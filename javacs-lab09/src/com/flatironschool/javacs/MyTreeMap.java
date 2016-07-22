@@ -66,14 +66,27 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 		if (target == null) {
             throw new NullPointerException();
 	    }
-		
+
+		return findNodeHelper(target, root);
+	}
+
+	private Node findNodeHelper(Object target, Node node) {
 		// something to make the compiler happy
-		@SuppressWarnings("unchecked")
-		Comparable<? super K> k = (Comparable<? super K>) target;
-		
-		// the actual search
-        // TODO: Fill this in.
-        return null;
+		if (node == null) {
+			return null;
+		} else {
+			@SuppressWarnings("unchecked")
+			Comparable<? super K> k = (Comparable<? super K>) target;
+			int cmp = k.compareTo(node.key);
+			
+			if(cmp == 0) {
+				return node;
+			} else if (cmp > 0) {
+				return findNodeHelper(target, node.right);
+			} else {
+				return findNodeHelper(target, node.left);
+			}
+		}
 	}
 
 	/**
@@ -92,7 +105,26 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 
 	@Override
 	public boolean containsValue(Object target) {
-		return false;
+		return containsValueHelper(target, root);
+	}
+
+	private boolean containsValueHelper(Object target, Node node) {
+		if (node == null){
+			return false;
+		} else {
+			if (equals(target, node.value)) {
+				return true;
+			} else {
+				boolean leftContains = containsValueHelper(target, node.left);
+				boolean rightContains = containsValueHelper(target, node.right);
+				if (leftContains || rightContains) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+
 	}
 
 	@Override
@@ -117,8 +149,18 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	@Override
 	public Set<K> keySet() {
 		Set<K> set = new LinkedHashSet<K>();
-        // TODO: Fill this in.
+		keySetHelper(set, root);
 		return set;
+	}
+
+	private void keySetHelper(Set<K> set, Node node) {
+		if(node == null) {
+			return;
+		} else {
+			keySetHelper(set, node.left);
+			boolean added = set.add(node.key);
+			keySetHelper(set, node.right);
+		}
 	}
 
 	@Override
@@ -131,12 +173,33 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 			size++;
 			return null;
 		}
+
 		return putHelper(root, key, value);
 	}
 
 	private V putHelper(Node node, K key, V value) {
-        // TODO: Fill this in.
-        return null;
+		Comparable<? super K> k = (Comparable<? super K>) key;
+		int cmp = k.compareTo(node.key);
+
+        if (cmp == 0) {
+        	V oldValue = node.value;
+        	node.value = value;
+        	return oldValue;
+        } else if (cmp < 0) {
+        	if (node.left == null) {
+	        	node.left = new Node(key, value);
+	        	size++;
+	        	return null;
+        	}
+        	return putHelper(node.left, key, value);
+        } else {
+        	if (node.right == null) {
+        		node.right = new Node(key, value);
+        		size++;
+        		return null;
+        	}
+        	return putHelper(node.right, key, value);
+        }
 	}
 
 	@Override
